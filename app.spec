@@ -4,10 +4,8 @@ block_cipher = None
 
 
 a = Analysis(['app.py'],
-             pathex=['/home/ray1422/workspace/Fantasic-Filter'],
+             pathex=['/home/ray1422/workspace/Fantastic-Filter-Desktop'],
              binaries=[],
-             datas=[('venv//Lib//site-packages//ttkthemes', 'ttkthemes')],
-             hiddenimports=['ttkthemes'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],

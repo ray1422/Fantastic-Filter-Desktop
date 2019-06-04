@@ -69,7 +69,8 @@ class APP(tk.Tk):
         self._main_image_enhanced = None
 
         ''' ========== theme ========== '''
-
+        '''
+        # MacOS is beautiful enough so that theme is not required. 
         try:
             from ttkthemes import ThemedStyle
             style = ThemedStyle(self)
@@ -77,7 +78,7 @@ class APP(tk.Tk):
         except ImportError as e:
             class ThemedStyle:
                 pass
-
+        '''
         ''' ====== configuration ====== '''
 
         self.model_dir = resource_path("pretrained/")
