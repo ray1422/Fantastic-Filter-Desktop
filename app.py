@@ -16,13 +16,6 @@ import subprocess
 from threading import RLock
 from PIL.ImageTk import PhotoImage
 
-try:
-    from ttkthemes import ThemedStyle
-
-    ttk_theme_not_found = False
-except ImportError as e:
-    ttk_theme_not_found = True
-
 from enhancer import Enhancer
 
 
@@ -33,6 +26,11 @@ class APP(tk.Tk):
 
     def __init__(self):
         super().__init__(className='fantasticFilter')
+
+        ''' ========== Locks ========== '''
+
+        self.resize_lock = td.Lock()
+        self.resizing = False
 
         ''' ======= Tk widgets ======== '''
         self.style = ttk.Style()
@@ -72,9 +70,13 @@ class APP(tk.Tk):
 
         ''' ========== theme ========== '''
 
-        if not ttk_theme_not_found:
+        try:
+            from ttkthemes import ThemedStyle
             style = ThemedStyle(self)
             style.set_theme("arc")
+        except ImportError as e:
+            class ThemedStyle:
+                pass
 
         ''' ====== configuration ====== '''
 
@@ -97,19 +99,31 @@ class APP(tk.Tk):
 
     def _resize_height_listener(self, *args):
         if not self._check_image(): return
+        with self.resize_lock:
+            if self.resizing:
+                return
+            self.resizing = True
         origin_height, origin_width, _ = np.shape(self._main_image_origin)
         resize_height = 0 if not self.resize_height.get() else int(self.resize_height.get())
         ratio = resize_height / origin_height
         new_width = int(origin_width * ratio)
         self.resize_width.set(new_width)
+        with self.resize_lock:
+            self.resizing = False
 
     def _resize_width_listener(self, *args):
         if not self._check_image(): return
+        with self.resize_lock:
+            if self.resizing:
+                return
+            self.resizing = True
         origin_height, origin_width, _ = np.shape(self._main_image_origin)
         resize_width = 0 if not self.resize_width.get() else int(self.resize_width.get())
         ratio = resize_width / origin_width
         new_height = int(origin_height * ratio)
         self.resize_height.set(new_height)
+        with self.resize_lock:
+            self.resizing = False
 
     def _enhance_task(self):
         new_height = int(self.resize_height.get())
@@ -330,8 +344,10 @@ class APP(tk.Tk):
         ttk.Label(frame_resize, text="寬/高").pack(fill='x')
         frame_resize_inputs = ttk.Frame(frame_resize)
         frame_resize_inputs.pack()
-        self.input_resize_height = ttk.Entry(frame_resize_inputs, textvariable=self.resize_height, validate='key', validatecommand=(self.register(isnumeric_or_blank), "%P"), width=9)
-        self.input_resize_width = ttk.Entry(frame_resize_inputs, textvariable=self.resize_width, validate='key', validatecommand=(self.register(isnumeric_or_blank), "%P"), width=9)
+        self.input_resize_height = ttk.Entry(frame_resize_inputs, textvariable=self.resize_height, validate='key',
+                                             validatecommand=(self.register(isnumeric_or_blank), "%P"), width=9)
+        self.input_resize_width = ttk.Entry(frame_resize_inputs, textvariable=self.resize_width, validate='key',
+                                            validatecommand=(self.register(isnumeric_or_blank), "%P"), width=9)
         self.input_resize_width.pack(side='left')
         self.input_resize_height.pack(side='right')
 
