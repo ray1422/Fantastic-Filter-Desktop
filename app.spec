@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['app.py'],
-             pathex=['/home/ray1422/workspace/Fantastic-Filter-Desktop'],
+             pathex=['./'],
              binaries=[],
              hookspath=[],
              runtime_hooks=[],
