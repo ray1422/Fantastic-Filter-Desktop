@@ -12,7 +12,6 @@ from tkinter import ttk
 import tkinter.filedialog as filedialog
 from PIL import Image, ImageTk
 import threading as td
-import subprocess
 from threading import RLock
 from PIL.ImageTk import PhotoImage
 
@@ -71,7 +70,8 @@ class APP(tk.Tk):
         self._main_image_enhanced = None
 
         ''' ========== theme ========== '''
-
+        # the UI in Windows is so ugly that even theme cannot help it, so just give up and do not load theme.
+        '''
         try:
             from ttkthemes import ThemedStyle
             style = ThemedStyle(self)
@@ -79,6 +79,7 @@ class APP(tk.Tk):
         except ImportError as e:
             class ThemedStyle:
                 pass
+        '''
 
         ''' ====== configuration ====== '''
 
@@ -156,7 +157,6 @@ class APP(tk.Tk):
             self._main_image_enhanced = enhance_result
             self._main_image_current_clean = self._main_image_enhanced
 
-
     def _enhance_handler(self, thread: td.Thread):
         if thread.is_alive():
             self.after(100, lambda: self._enhance_handler(thread))
@@ -171,33 +171,31 @@ class APP(tk.Tk):
                 self.canvas.set_main_image(image)
                 self.canvas.request_update()
                 self.status_text.set("處理完成！")
+                '''
                 try:
                     subprocess.check_output(["notify-send", "圖片處理完成！", "<b>幻想濾鏡™</b>處理好圖片囉！", "--icon=face-glasses"])
                 except:
                     logging.warning("can't send notification.")
                 self.after(3000, lambda: self.status_text.set("就緒"))
+                '''
 
             else:
                 pop_msg.showerror("Something went wrong.. ", "圖片處理失敗！\n多數失敗是由於圖片太大張了，把圖片縮小點試試～")
                 pop_msg.showerror("Something went wrong.. ", self._model.error_log)
 
                 self.status_text.set("處理失敗！")
+                '''
                 try:
                     subprocess.check_output(["notify-send", "圖片處理失敗！", "<b>幻想濾鏡™</b>圖片處理失敗了QQ", "--icon=face-sad"])
                 except:
                     logging.warning("can't send notification.")
+                '''
 
                 self.after(3000, lambda: self.status_text.set("就緒"))
 
     def open_image_listener(self, *args):
 
-        try:
-            # for Linux
-            filename = subprocess.check_output(['zenity', '--file-selection']).decode("utf-8").strip()
-        except FileNotFoundError:
-            filename = filedialog.askopenfilename()
-        except subprocess.CalledProcessError:
-            filename = False
+        filename = filedialog.askopenfilename()
 
         if not filename:
             return False
@@ -299,19 +297,18 @@ class APP(tk.Tk):
             image.save(path)
 
     def run(self):
-        '''
+
         try:
-            # self.call('wm', 'iconphoto', self._w, ImageTk.PhotoImage(Image.open(resource_path('appicon.png'))))
-            self.iconbitmap(resource_path('appicon.ico'))
-        except:
-            pass
-        '''
+            self.call('wm', 'iconphoto', self._w, ImageTk.PhotoImage(Image.open(resource_path('appicon.png'))))
+            # self.iconbitmap(resource_path('appicon.ico'))
+        except Exception as e:
+            logging.warning("cannot load app icon.")
+            logging.warning(str(e))
         self.title("Fantastic Filter")
         self.geometry("%dx%d+50+40" % (800, 500))
-
         """
-        menu_bar = tk.Menu(self, background='#aaa')
-
+        menu_bar = tk.Menu(self)
+        self.config(menu=menu_bar)
         menu_file = tk.Menu(menu_bar, tearoff=0)
         menu_edit = tk.Menu(menu_bar, tearoff=0)
         menu_help = tk.Menu(menu_bar, tearoff=0)
@@ -418,7 +415,6 @@ class APP(tk.Tk):
 
         status_bar = ttk.Label(frame_status, textvariable=self.status_text, style='gary.TLabel')
         status_bar.pack(side='left', padx=5, pady=0)
-        # self.config(menu=menu_bar)
 
         self.bind_all("<Command-o>", self.open_image_listener)
         self.bind_all("<Control-o>", self.open_image_listener)
