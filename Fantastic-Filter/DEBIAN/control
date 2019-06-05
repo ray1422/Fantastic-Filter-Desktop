@@ -1,4 +1,5 @@
 Package: fantastic-filter
-Version: 0.0.1
+Version: 0.0.2
 Architecture: amd64
 description: you can use this application to de-noise your photo with just one click.
+maintainer: Ray's Another World <ray20020809@gmail.com>
