@@ -1,6 +1,8 @@
 .idea/
-pretrained/*.pb
-__pycache__
-.DS_Store/
-dist/
+Fantastic-Filter/opt/*
+__pycache__/
 build/
+dist/
+*.deb
+pretrained/
+venv/
