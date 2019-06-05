@@ -2,6 +2,7 @@
 Fantastic-Filter/opt/*
 __pycache__/
 build/
+dist/
 *.deb
 pretrained/
 venv/
