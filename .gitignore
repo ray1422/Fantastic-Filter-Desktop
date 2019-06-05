@@ -1,0 +1,7 @@
+.idea/
+Fantastic-Filter/opt/*
+__pycache__/
+build/
+*.deb
+pretrained/
+venv/
