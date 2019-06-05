@@ -4,10 +4,10 @@ block_cipher = None
 
 
 a = Analysis(['app.py'],
-             pathex=['./Fantasic-Filter'],
+             pathex=['./'],
              binaries=[],
-             datas=[('venv//Lib//site-packages//ttkthemes', 'ttkthemes'), ('./appicon.png', 'appicon.png'), ('./appicon.ico', ''appicon.ico'')],
-             hiddenimports=['ttkthemes'],
+             datas=[('venv/lib/python3.6/site-packages/ttkthemes', 'ttkthemes'),('venv/lib/python3.6/site-packages/PIL', 'PIL'), ('./appicon.png', 'appicon.png'), ('./appicon.ico', 'appicon.ico')],
+             hiddenimports=['ttkthemes', 'PIL'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
