@@ -1,0 +1,23 @@
+[Desktop Entry]
+Version=0.0.1
+Name=Fantastic Filter Professional Plus
+# Only KDE 4 seems to use GenericName, so we reuse the KDE strings.
+# From Ubuntu's language-pack-kde-XX-base packages, version 9.04-20090413.
+GenericName=Fantastic Filter Professional Plus
+
+GenericName[zh_CN]=空想滤镜
+GenericName[zh_HK]=幻想濾鏡
+GenericName[zh_TW]=幻想濾鏡
+Comment[zh_CN]=修图从未如此惬意
+Comment[zh_HK]=修圖從未如此愜意
+Comment[zh_TW]=修圖從未如此愜意
+Exec=/opt/FantasticFilter/app
+# Path=/opt/FantasticFilter
+StartupNotify=false
+Terminal=false
+Icon=/opt/FantasticFilter/appicon.png
+StartupWMClass=fantasticFilter
+Type=Application
+Categories=Graphics;2DGraphics;RasterGraphics;
+# MimeType=image/jpeg;
+
