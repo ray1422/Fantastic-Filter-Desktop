@@ -4,9 +4,9 @@ block_cipher = None
 
 
 a = Analysis(['app.py'],
-             pathex=['/home/ray1422/workspace/Fantasic-Filter'],
+             pathex=['./Fantasic-Filter'],
              binaries=[],
-             datas=[('venv//Lib//site-packages//ttkthemes', 'ttkthemes')],
+             datas=[('venv//Lib//site-packages//ttkthemes', 'ttkthemes'), ('./appicon.png', 'appicon.png'), ('./appicon.ico', ''appicon.ico'')],
              hiddenimports=['ttkthemes'],
              hookspath=[],
              runtime_hooks=[],
