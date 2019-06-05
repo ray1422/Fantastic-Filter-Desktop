@@ -6,8 +6,8 @@ block_cipher = None
 a = Analysis(['app.py'],
              pathex=['./'],
              binaries=[],
-             datas=[('venv/lib/python3.6/site-packages/ttkthemes', 'ttkthemes'),('venv/lib/python3.6/site-packages/PIL', 'PIL'), ('./appicon.png', 'appicon.png'), ('./appicon.ico', 'appicon.ico')],
-             hiddenimports=['ttkthemes', 'PIL'],
+             datas=[('./appicon.png', '.'), ('./appicon.ico', '.')],
+             hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -27,9 +27,11 @@ exe = EXE(pyz,
           name='app',
           debug=False,
           bootloader_ignore_signals=False,
+          console=False,
+          icon='./appicon.ico',
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=True)
+          )
 
 
