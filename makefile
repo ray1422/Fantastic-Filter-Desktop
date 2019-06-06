@@ -1,7 +1,8 @@
 all:app.py
 	pyinstaller -F app.spec
-	mv dist/app Fantastic-Filter/opt/FantasticFilter/
+	mv dist/app Fantastic-Filter.app/Contents/MacOS/
 	dpkg -b Fantastic-Filter/
 
+
 install:
-	sudo dpkg -i Fantastic-Filter.deb
+	sudo cp -r Fantastic-Filter.app /Applications/
