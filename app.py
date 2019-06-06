@@ -14,8 +14,10 @@ from PIL import Image, ImageTk
 import threading as td
 from threading import RLock
 from PIL.ImageTk import PhotoImage
-
+from PIL import ImageGrab
 from enhancer import Enhancer
+import win32clipboard
+from io import BytesIO
 
 
 # if u wanna running it on CPU.
@@ -85,6 +87,31 @@ class APP(tk.Tk):
 
         self.model_dir = resource_path("pretrained/")
         self.vignette_handler()
+
+    def paste_image_listener(self, *args):
+        image = ImageGrab.grabclipboard()
+        if image is not None:
+            self.canvas.set_main_image(image)
+            self._main_image_origin = np.asarray(image)
+            self.resize_height.set(image.height)
+            self.resize_width.set(image.width)
+            self.canvas.request_update()
+            self.status_text.set("已經成功貼上圖片！")
+
+    def copy_image_listener(self, *args):
+        def send_to_clipboard(clip_type, data2):
+            win32clipboard.OpenClipboard()
+            win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardData(clip_type, data2)
+            win32clipboard.CloseClipboard()
+
+        image = self.canvas.main_image
+        output = BytesIO()
+        image.convert("RGB").save(output, "BMP")
+        data = output.getvalue()[14:]
+        output.close()
+        send_to_clipboard(win32clipboard.CF_DIB, data)
+        self.status_text.set("已經將圖片複製到剪貼簿了！")
 
     def _show_origin_listener(self, *args):
         if not (self._check_image()): return
@@ -415,11 +442,15 @@ class APP(tk.Tk):
 
         status_bar = ttk.Label(frame_status, textvariable=self.status_text, style='gary.TLabel')
         status_bar.pack(side='left', padx=5, pady=0)
-
         self.bind_all("<Command-o>", self.open_image_listener)
         self.bind_all("<Control-o>", self.open_image_listener)
         self.bind_all("<Command-s>", self.save)
         self.bind_all("<Control-s>", self.save)
+        self.bind_all("<Control-v>", self.paste_image_listener)
+        self.bind_all("<Command-v>", self.paste_image_listener)
+        self.bind_all("<Control-c>", self.copy_image_listener)
+        self.bind_all("<Command-c>", self.copy_image_listener)
+
         self.mainloop()
 
     @staticmethod
