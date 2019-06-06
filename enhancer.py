@@ -42,11 +42,13 @@ class Enhancer:
                                                                return_elements=['output_image:0'],
                                                                name='output')
                 config = tf.ConfigProto()
-                config.gpu_options.allow_growth = True
+                # config.gpu_options.allow_growth = True
+                config.gpu_options.per_process_gpu_memory_fraction = 1
                 self._sess = tf.Session(graph=graph, config=config)
 
             except Exception as e:
                 try:
+                    logging.error(e)
                     self._sess.close()
                     raise e
                 except Exception as e:
