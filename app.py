@@ -12,7 +12,6 @@ from tkinter import ttk
 import tkinter.filedialog as filedialog
 from PIL import Image, ImageTk
 import threading as td
-import subprocess
 from threading import RLock
 from PIL.ImageTk import PhotoImage
 
@@ -37,6 +36,8 @@ class APP(tk.Tk):
         self.frame_main_left = None
         self.frame_main_center = None
         self.frame_main_right = None
+        self.show_origin_btn = None
+        self.show_enhanced_btn = None
         self.canvas: ResizingCanvas = None
         self.enhance_pb = None
         self.start_enhance_btn = None
@@ -69,8 +70,8 @@ class APP(tk.Tk):
         self._main_image_enhanced = None
 
         ''' ========== theme ========== '''
+        # the UI in Windows is so ugly that even theme cannot help it, so just give up and do not load theme.
         '''
-        # MacOS is beautiful enough so that theme is not required. 
         try:
             from ttkthemes import ThemedStyle
             style = ThemedStyle(self)
@@ -79,14 +80,32 @@ class APP(tk.Tk):
             class ThemedStyle:
                 pass
         '''
+
         ''' ====== configuration ====== '''
 
         self.model_dir = resource_path("pretrained/")
         self.vignette_handler()
 
-    def enhance_listener(self, *args):
-        if not (self._check_image() and self._check_model()):
+    def _show_origin_listener(self, *args):
+        if not (self._check_image()): return
+        image = Image.fromarray(np.asarray(self._main_image_origin))
+        self.canvas.set_main_image(image)
+        self.show_origin_btn.config(state="disabled")
+        self.show_enhanced_btn.config(state="normal")
+
+    def _show_enhanced_listener(self, *args):
+        if not (self._check_image()): return
+        if self._main_image_enhanced is None:
+            pop_msg.showinfo("Umm...", "請先增強圖片")
             return
+        image = Image.fromarray(np.asarray(self._main_image_enhanced))
+        self.canvas.set_main_image(image)
+        self.canvas.request_update()
+        self.show_enhanced_btn.config(state="disabled")
+        self.show_origin_btn.config(state="normal")
+
+    def enhance_listener(self, *args):
+        if not (self._check_image() and self._check_model()): return
         thread = td.Thread(target=self._enhance_task)
         self.status_text.set("增強圖片中..")
         self.enhance_pb.start()
@@ -115,8 +134,7 @@ class APP(tk.Tk):
     def _resize_width_listener(self, *args):
         if not self._check_image(): return
         with self.resize_lock:
-            if self.resizing:
-                return
+            if self.resizing: return
             self.resizing = True
         origin_height, origin_width, _ = np.shape(self._main_image_origin)
         resize_width = 0 if not self.resize_width.get() else int(self.resize_width.get())
@@ -134,9 +152,10 @@ class APP(tk.Tk):
 
         resize_image = cv2.resize(self._main_image_origin, dsize=(new_width, new_height))
         resize_image = resize_image[new_height % 8:, new_width % 8:, :]
-        self._main_image_enhanced = self._model.sample(resize_image, denoise=False)
-        self._main_image_current_clean = self._main_image_enhanced
-        print(self._main_image_enhanced)
+        enhance_result = self._model.sample(resize_image, denoise=False)
+        if enhance_result is not None:
+            self._main_image_enhanced = enhance_result
+            self._main_image_current_clean = self._main_image_enhanced
 
     def _enhance_handler(self, thread: td.Thread):
         if thread.is_alive():
@@ -145,27 +164,40 @@ class APP(tk.Tk):
             self.enhance_pb.stop()
             self.start_enhance_btn.config(state="normal")
             self.config(cursor='')
-            image = Image.fromarray(np.asarray(self._main_image_enhanced))
-            self.canvas.set_main_image(image)
-            self.canvas.request_update()
-            self.status_text.set("處理完成！")
-            try:
-                subprocess.check_output(["notify-send", "圖片處理完成！", "<b>幻想濾鏡™</b>處理好圖片囉！", "--icon=face-glasses"])
-            except FileNotFoundError:
-                print("can't send notification.")
-            self.after(3000, lambda: self.status_text.set("就緒"))
+            if self._model.success:
+                self.show_enhanced_btn.config(state="disabled")
+                self.show_origin_btn.config(state="normal")
+                image = Image.fromarray(np.asarray(self._main_image_enhanced))
+                self.canvas.set_main_image(image)
+                self.canvas.request_update()
+                self.status_text.set("處理完成！")
+                '''
+                try:
+                    subprocess.check_output(["notify-send", "圖片處理完成！", "<b>幻想濾鏡™</b>處理好圖片囉！", "--icon=face-glasses"])
+                except:
+                    logging.warning("can't send notification.")
+                self.after(3000, lambda: self.status_text.set("就緒"))
+                '''
+
+            else:
+                pop_msg.showerror("Something went wrong.. ", "圖片處理失敗！\n多數失敗是由於圖片太大張了，把圖片縮小點試試～")
+                pop_msg.showerror("Something went wrong.. ", self._model.error_log)
+
+                self.status_text.set("處理失敗！")
+                '''
+                try:
+                    subprocess.check_output(["notify-send", "圖片處理失敗！", "<b>幻想濾鏡™</b>圖片處理失敗了QQ", "--icon=face-sad"])
+                except:
+                    logging.warning("can't send notification.")
+                '''
+
+                self.after(3000, lambda: self.status_text.set("就緒"))
 
     def open_image_listener(self, *args):
 
-        try:
-            filename = subprocess.check_output(['zenity', '--file-selection']).decode("utf-8").strip()
-        except FileNotFoundError:
-            filename = filedialog.askopenfilename()
-        except subprocess.CalledProcessError:
-            filename = False
+        filename = filedialog.askopenfilename()
 
         if not filename:
-            logging.info("cancel opening image.")
             return False
         try:
             logging.info("open image:", filename)
@@ -178,8 +210,6 @@ class APP(tk.Tk):
 
             self.resize_height.set(image.height)
             self.resize_width.set(image.width)
-
-
 
         except IOError as e:
             logging.error("open image failed!")
@@ -268,13 +298,17 @@ class APP(tk.Tk):
 
     def run(self):
 
+        try:
+            self.call('wm', 'iconphoto', self._w, ImageTk.PhotoImage(Image.open(resource_path('appicon.png'))))
+            # self.iconbitmap(resource_path('appicon.ico'))
+        except Exception as e:
+            logging.warning("cannot load app icon.")
+            logging.warning(str(e))
         self.title("Fantastic Filter")
-
         self.geometry("%dx%d+50+40" % (800, 500))
-
         """
-        menu_bar = tk.Menu(self, background='#aaa')
-
+        menu_bar = tk.Menu(self)
+        self.config(menu=menu_bar)
         menu_file = tk.Menu(menu_bar, tearoff=0)
         menu_edit = tk.Menu(menu_bar, tearoff=0)
         menu_help = tk.Menu(menu_bar, tearoff=0)
@@ -308,6 +342,10 @@ class APP(tk.Tk):
             model_cbb.current(0)  # 選擇第一個
         model_cbb.bind("<<ComboboxSelected>>", self.select_model_listener)  # 绑定事件,(下拉列表框被选中时)
 
+        self.show_origin_btn = ttk.Button(frame_toolbar, text="檢視原圖", command=self._show_origin_listener)
+        self.show_enhanced_btn = ttk.Button(frame_toolbar, text="檢視增強後", command=self._show_enhanced_listener)
+        self.show_origin_btn.pack(side='left', padx=(10, 0))
+        self.show_enhanced_btn.pack(side='left', padx=(0, 10))
         ''' main area '''
 
         # split into 3 part, | load _model,image... | image preview | edit.. save.|
@@ -349,8 +387,8 @@ class APP(tk.Tk):
                                              validatecommand=(self.register(isnumeric_or_blank), "%P"), width=9)
         self.input_resize_width = ttk.Entry(frame_resize_inputs, textvariable=self.resize_width, validate='key',
                                             validatecommand=(self.register(isnumeric_or_blank), "%P"), width=9)
-        self.input_resize_width.pack(side='left')
-        self.input_resize_height.pack(side='right')
+        self.input_resize_width.pack(side='left', padx=(0, 4))
+        self.input_resize_height.pack(side='right', padx=(4, 0))
 
         ttk.Separator(self.frame_main_right, orient='horizontal').pack(fill='x', pady=10)
 
@@ -377,7 +415,6 @@ class APP(tk.Tk):
 
         status_bar = ttk.Label(frame_status, textvariable=self.status_text, style='gary.TLabel')
         status_bar.pack(side='left', padx=5, pady=0)
-        # self.config(menu=menu_bar)
 
         self.bind_all("<Command-o>", self.open_image_listener)
         self.bind_all("<Control-o>", self.open_image_listener)
@@ -510,7 +547,6 @@ class ResizingCanvas(tk.Canvas):
 
 def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
-        print(sys._MEIPASS)
         return sys._MEIPASS + '/' + relative_path
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), relative_path)
 

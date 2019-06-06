@@ -1,3 +1,4 @@
+import logging
 import os
 
 import cv2
@@ -15,6 +16,8 @@ class Enhancer:
         self._graph = _Graph()
         self._result = []
         self._available = True
+        self.success = False
+        self.error_log = ''
         self.model_available = lambda: self._sess is not None
         if not gpu:
             os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -109,10 +112,12 @@ class Enhancer:
 
                 result_img = cv2.cvtColor(result_img, cv2.COLOR_RGB2BGR)
                 cv2.imwrite(save_path, result_img)
+                self.success = True
 
             except Exception as e:
                 print("Something went wrong!")
                 print(str(e))
+                self.success = False
 
         self._available = True
 
@@ -135,12 +140,16 @@ class Enhancer:
 
             if denoise_after:
                 result_img = cv2.fastNlMeansDenoisingColored(result_img, None, 10, 10, 5, 5)
-
+            self.error_log = ''
+            self.success = True
             return result_img
         except Exception as e:
-            print("Something went wrong!")
-            print(str(e))
-            return np.zeros_like(image)
+            logging.error("Something went during enhancing task :(")
+            logging.error("It should caused by TensorFlow.")
+            logging.error(str(e))
+            self.success = False
+            self.error_log = str(e)
+            return None
 
         finally:
             self._available = True
