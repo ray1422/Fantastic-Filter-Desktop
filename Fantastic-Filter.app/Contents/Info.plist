@@ -1,0 +1,11 @@
+{
+	CFBundleDisplayName = "Fantastic Filter Professional Plus";
+	CFBundleIdentifier = "FantasticFilterProfessionalPlus";
+	CFBundleIconFile = 'appicon.icns';
+	CFBundleVersion = "0.3.9";
+	CFBundlePackageType = APPL;
+	CFBundleSignature = FFPP;
+	CFBundleExecutable = app;
+	CFBundleName = "Fantastic Filter Professional Plus";
+	NSHighResolutionCapable = True;
+}
