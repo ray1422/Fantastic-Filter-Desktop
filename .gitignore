@@ -4,4 +4,4 @@ __pycache__
 .DS_Store
 build/
 dist/
-app
+Fantastic-Filter.app/Contents/MacOS/app
