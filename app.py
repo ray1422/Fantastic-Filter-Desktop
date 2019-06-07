@@ -99,6 +99,8 @@ class APP(tk.Tk):
             self.status_text.set("已經成功貼上圖片！")
 
     def copy_image_listener(self, *args):
+        if self.canvas.main_image is None: return
+
         def send_to_clipboard(clip_type, data2):
             win32clipboard.OpenClipboard()
             win32clipboard.EmptyClipboard()
@@ -389,6 +391,11 @@ class APP(tk.Tk):
         bg = "#e7e7e7" if bg == 'systemWindowBody' else bg
         self.canvas = ResizingCanvas(self.frame_main_center, bg=bg, bd=0, highlightthickness=0, relief='ridge')
         self.canvas.pack(fill='both', expand=True, pady=10, padx=10)
+
+        canvas_right_click_menu = tk.Menu(self, tearoff=0)
+        canvas_right_click_menu.add_command(label="複製", command=self.copy_image_listener)
+        canvas_right_click_menu.add_command(label="貼上", command=self.paste_image_listener)
+        self.canvas.bind("<Button-3>", lambda e: canvas_right_click_menu.post(e.x_root, e.y_root))
 
         self.frame_main_right = ttk.Frame(frame_main, width=200)
         self.frame_main_right.grid(row=0, column=1, sticky='news', padx=20, pady=20)
