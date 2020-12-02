@@ -19,7 +19,7 @@ from PIL.ImageTk import PhotoImage
 from enhancer import Enhancer
 
 
-# if u wanna running it on CPU.
+# Uncomment the following line if u wanna run it on CPU.
 # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 class APP(tk.Tk):
